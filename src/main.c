@@ -35,8 +35,8 @@ int memid;
 unsigned char *thesegment;
 
 // debug
-lash_debug_log_t log;
-char logmsg[1024];
+lash_debug_log_t logger;
+char loggermsg[1024];
 
 void reap(int s) {
 	if (!pid)
@@ -52,7 +52,7 @@ void shutdown_main(int s) {
 		shmdt(thesegment);
 		shmctl(memid, IPC_RMID, NULL);
 	}
-	lash_debugLogFree(&log);
+	lash_debugLogFree(&logger);
 	exit(s);
 }
 
@@ -90,7 +90,7 @@ unsigned short truncateAtCursor(unsigned short cursor) {
 
 int main(int argc, char **argv) {
 	
-	lash_debugLogInit(&log, 1);
+	lash_debugLogInit(&logger, 1);
 	
 	signal(SIGABRT, sig_abort);
 	signal(SIGCHLD, sig_child);
@@ -101,30 +101,30 @@ int main(int argc, char **argv) {
 	tmpfd = mkstemp(tokenfile);
 	
 	if (tmpfd == -1) {
-		lash_debugLogAdd(&log, "main", LASH_DEBUG_LOG_LEVEL_CRITICAL, "cant create shared mem token file");
+		lash_debugLogAdd(&logger, "main", LASH_DEBUG_LOG_LEVEL_CRITICAL, "cant create shared mem token file");
 		raise(SIGABRT);
 	}
 	
-	sprintf(logmsg, "tmpfilename %s is fd %i", tokenfile, tmpfd);	
-	lash_debugLogAdd(&log, "main", LASH_DEBUG_LOG_LEVEL_DEBUG, logmsg);
+	sprintf(loggermsg, "tmpfilename %s is fd %i", tokenfile, tmpfd);	
+	lash_debugLogAdd(&logger, "main", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
 	
 	thekey =  ftok(tokenfile, 0x0A);
-	sprintf(logmsg, "Have token %i", thekey);	
-	lash_debugLogAdd(&log, "main", LASH_DEBUG_LOG_LEVEL_DEBUG, logmsg);
+	sprintf(loggermsg, "Have token %i", thekey);	
+	lash_debugLogAdd(&logger, "main", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
 	
 	memid = shmget(thekey, BUFFER_SIZE + sizeof(unsigned short), 0600 | IPC_CREAT);
 	if (memid == -1) {
-		sprintf(logmsg, "Couldnt generate shared memory: %s", strerror(errno));	
-		lash_debugLogAdd(&log, "main", LASH_DEBUG_LOG_LEVEL_CRITICAL, logmsg);
+		sprintf(loggermsg, "Couldnt generate shared memory: %s", strerror(errno));	
+		lash_debugLogAdd(&logger, "main", LASH_DEBUG_LOG_LEVEL_CRITICAL, loggermsg);
 		raise(SIGABRT);
 	}
-	sprintf(logmsg, "Have memid %i\n", memid);	
-	lash_debugLogAdd(&log, "main", LASH_DEBUG_LOG_LEVEL_DEBUG, logmsg);
+	sprintf(loggermsg, "Have memid %i\n", memid);	
+	lash_debugLogAdd(&logger, "main", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
 	
 	thesegment = shmat(memid, (void*)0, 0);
 	if (thesegment == (unsigned char*)(-1)) {
-		sprintf(logmsg, "Couldnt get memptr: %s", strerror(errno));	
-		lash_debugLogAdd(&log, "main", LASH_DEBUG_LOG_LEVEL_CRITICAL, logmsg);
+		sprintf(loggermsg, "Couldnt get memptr: %s", strerror(errno));	
+		lash_debugLogAdd(&logger, "main", LASH_DEBUG_LOG_LEVEL_CRITICAL, loggermsg);
 		raise(SIGABRT);
 	}
 	
@@ -162,8 +162,8 @@ int main(int argc, char **argv) {
 				unsigned short out_threshold;
 				
 				if (lash_netsimmidiHttpGetConnection(&httpclient) > 0) {
-					sprintf(logmsg, "connect fd: %d", httpclient.cd);	
-					lash_debugLogAdd(&log, "http", LASH_DEBUG_LOG_LEVEL_DEBUG, logmsg);
+					sprintf(loggermsg, "connect fd: %d", httpclient.cd);	
+					lash_debugLogAdd(&logger, "http", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
 					data_cursor = getCursor();
 					out_cursor = 0;
 					out_threshold = data_cursor;
@@ -187,20 +187,20 @@ int main(int argc, char **argv) {
 					out_threshold = out_cursor;
 					
 					if (out_cursor > 0 ) {
-						sprintf(logmsg, "sent %d triplets to fd %d", (int)out_cursor / 3, httpclient.cd);	
-						lash_debugLogAdd(&log, "http", LASH_DEBUG_LOG_LEVEL_DEBUG, logmsg);
+						sprintf(loggermsg, "sent %d triplets to fd %d", (int)out_cursor / 3, httpclient.cd);	
+						lash_debugLogAdd(&logger, "http", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
 					}
 					
 				} else {
-					sprintf(logmsg, "Noconnnection: %s", strerror(errno));	
-					lash_debugLogAdd(&log, "http", LASH_DEBUG_LOG_LEVEL_DEBUG, logmsg);
+					sprintf(loggermsg, "Noconnnection: %s", strerror(errno));	
+					lash_debugLogAdd(&logger, "http", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
 					out_threshold = getCursor(); // flush buffer
 				}
 				
 				lash_netsimmidiHttpFinishConnection(&httpclient);
 				data_cursor = truncateAtCursor(out_threshold);
-				sprintf(logmsg, "cursor after truncate: %d", data_cursor);	
-				lash_debugLogAdd(&log, "midi", LASH_DEBUG_LOG_LEVEL_DEBUG, logmsg);
+				sprintf(loggermsg, "cursor after truncate: %d", data_cursor);	
+				lash_debugLogAdd(&logger, "midi", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
 			}
 			
 			break;
@@ -222,23 +222,23 @@ int main(int argc, char **argv) {
 			run = 0;
 		} else {
 			if (data_cursor < BUFFER_SIZE) {
-				sprintf(logmsg, "raw: %x %x %x", midi.raw[0], midi.raw[1], midi.raw[2]);	
-				lash_debugLogAdd(&log, "midi", LASH_DEBUG_LOG_LEVEL_DEBUG, logmsg);
-				sprintf(logmsg, "instr %x subinstr %x", midi.is.instruction, midi.is.sub_instruction);	
-				lash_debugLogAdd(&log, "midi", LASH_DEBUG_LOG_LEVEL_DEBUG, logmsg);
+				sprintf(loggermsg, "raw: %x %x %x", midi.raw[0], midi.raw[1], midi.raw[2]);	
+				lash_debugLogAdd(&logger, "midi", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
+				sprintf(loggermsg, "instr %x subinstr %x", midi.is.instruction, midi.is.sub_instruction);	
+				lash_debugLogAdd(&logger, "midi", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
 				if (!lash_netsimmidiInstructionTranslate(&ins, &(midi.is))) {
 					if (ins.state == LASH_NETSIMMIDI_COMPLETED) {
 						memcpy(thesegment + data_cursor + sizeof(unsigned short), ins.result, 3);
 						data_cursor += 3;
 						memcpy(thesegment, &data_cursor, sizeof(unsigned short));
-						sprintf(logmsg, "success translate %x %x %x", ins.result[0], ins.result[1], ins.result[2]);	
-						lash_debugLogAdd(&log, "midi", LASH_DEBUG_LOG_LEVEL_DEBUG, logmsg);
+						sprintf(loggermsg, "success translate %x %x %x", ins.result[0], ins.result[1], ins.result[2]);	
+						lash_debugLogAdd(&logger, "midi", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
 						lash_netsimmidiInstructionReset(&ins);
 					}
 				}
 			} else {
-				sprintf(logmsg, "data buffer full :/");	
-				lash_debugLogAdd(&log, "midi", LASH_DEBUG_LOG_LEVEL_WARNING, logmsg);
+				sprintf(loggermsg, "data buffer full :/");	
+				lash_debugLogAdd(&logger, "midi", LASH_DEBUG_LOG_LEVEL_WARNING, loggermsg);
 			}			
 		}
 	}

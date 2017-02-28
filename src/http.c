@@ -106,7 +106,7 @@ int lash_netsimmidiHttpFinishConnection(lash_netsimmidi_output_http_t *c) {
 	int r;
 	char request[LASH_NETSIMMIDI_HTTP_BODY_MAX + LASH_NETSIMMIDI_HTTP_HEADER_MAX];
 	
-	sprintf(c->header, "HTTP/1.1 200 OK\r\nServer: Midifeeder\r\nAccess-Control-Allow-Origin: *\r\nContent-type: text/plain\r\nContent-Length: %d\r\n\r\n", c->body_cursor);
+	sprintf(c->header, "HTTP/1.1 200 OK\r\nServer: Midifeeder\r\nAccess-Control-Allow-Origin: *\r\nContent-type: text/plain\r\nContent-Length: %d\r\n\r\n", (int)c->body_cursor);
 	strcpy(request, c->header);
 	memcpy(request + strlen(c->header), c->body, c->body_cursor);
 	
