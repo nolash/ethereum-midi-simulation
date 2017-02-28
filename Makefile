@@ -1,5 +1,6 @@
 INCLUDE = ./include/
 LIBS = ./lib/
+LIBDIR = ./bin/
 BINDIR = ./bin/
 SRCDIR = ./src/
 BUILDDIR = ./build/
@@ -8,7 +9,7 @@ all: shared midi
 
 shared:
 	$(CC) -Wall -I$(INCLUDE) -o $(BUILDDIR)lash_debug_log_lib.o -fPIC -c $(SRCDIR)lib/lash_debug_log.c
-	$(CC) -shared -Wl,-soname,liblashdebug.so.0 -o $(LIBS)liblashdebug.so $(BUILDDIR)lash_debug_log_lib.o
+	$(CC) -shared -Wl,-soname,liblashdebug.so.0 -o $(LIBDIR)liblashdebug.so $(BUILDDIR)lash_debug_log_lib.o
 	
 midi:
 	$(CC) -Wall -g -I$(INCLUDE) -gdwarf-2 -g3 -c $(SRCDIR)instruction.c -o $(BUILDDIR)instruction.o
@@ -20,3 +21,4 @@ midi:
 clean:
 	rm $(BUILDDIR)* -rf
 	rm $(BINDIR)* -rf
+	rm $(LIBDIR)* -rf
