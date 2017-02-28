@@ -192,15 +192,14 @@ int main(int argc, char **argv) {
 					}
 					
 				} else {
-					sprintf(loggermsg, "Noconnnection: %s", strerror(errno));	
+					sprintf(loggermsg, "noconnnection: %s", strerror(errno));	
 					lash_debugLogAdd(&logger, "http", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
 					out_threshold = getCursor(); // flush buffer
 				}
 				
 				lash_netsimmidiHttpFinishConnection(&httpclient);
 				data_cursor = truncateAtCursor(out_threshold);
-				sprintf(loggermsg, "cursor after truncate: %d", data_cursor);	
-				lash_debugLogAdd(&logger, "midi", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
+
 			}
 			
 			break;
