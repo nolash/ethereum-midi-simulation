@@ -11,12 +11,24 @@ void lash_netsimmidiInstructionReset(lash_netsimmidi_instruction_t *ins) {
 int lash_netsimmidiInstructionTranslate(lash_netsimmidi_instruction_t *ins, lash_netsimmidi_input_status_t *st) {
 	switch (st->instruction) {
 		case LASH_NETSIMMIDI_NOTEON:
-			ins->state = LASH_NETSIMMIDI_PENDING;
-			ins->one = st->key;
-			ins->result[0] = LASH_NETSIMMIDI_NODE;
-			ins->result[1] = st->key;
+			if (ins->state == LASH_NETSIMMIDI_PENDING && ins->result[0] == LASH_NETSIMMIDI_NODE) { // connect one node with another
+				if (ins->one > -1 && ins->one != st->key) {
+					ins->other = st->key;
+					ins->result[2] = ins->other;
+					ins->state = LASH_NETSIMMIDI_COMPLETED;
+				}
+			} else if (ins->state == LASH_NETSIMMIDI_NEW) {
+				ins->state = LASH_NETSIMMIDI_PENDING;
+				ins->one = st->key;
+				ins->result[0] = LASH_NETSIMMIDI_NODE;
+				ins->result[1] = st->key;
+			} else {
+				return -1;
+			}
 			break;
 		case LASH_NETSIMMIDI_NOTEOFF:
+			if (ins->state != LASH_NETSIMMIDI_PENDING)
+				return -1;
 			ins->state = LASH_NETSIMMIDI_COMPLETED;
 			ins->result[0] = LASH_NETSIMMIDI_NODE;
 			ins->result[1] = st->key;

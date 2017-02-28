@@ -210,6 +210,9 @@ int main(int argc, char **argv) {
 	
 	lash_netsimmidi_instruction_t ins;
 	lash_netsimmidiInstructionReset(&ins);
+	struct timespec ns, nsr;
+	ns.tv_sec = 0;
+	ns.tv_nsec = 500000;
 	
 	while (run) {
 		
@@ -222,10 +225,10 @@ int main(int argc, char **argv) {
 			run = 0;
 		} else {
 			if (data_cursor < BUFFER_SIZE) {
-				sprintf(loggermsg, "raw: %x %x %x", midi.raw[0], midi.raw[1], midi.raw[2]);	
+				/*sprintf(loggermsg, "raw: %x %x %x", midi.raw[0], midi.raw[1], midi.raw[2]);	
 				lash_debugLogAdd(&logger, "midi", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
 				sprintf(loggermsg, "instr %x subinstr %x", midi.is.instruction, midi.is.sub_instruction);	
-				lash_debugLogAdd(&logger, "midi", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
+				lash_debugLogAdd(&logger, "midi", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);*/
 				if (!lash_netsimmidiInstructionTranslate(&ins, &(midi.is))) {
 					if (ins.state == LASH_NETSIMMIDI_COMPLETED) {
 						memcpy(thesegment + data_cursor + sizeof(unsigned short), ins.result, 3);
@@ -234,6 +237,7 @@ int main(int argc, char **argv) {
 						sprintf(loggermsg, "success translate %x %x %x", ins.result[0], ins.result[1], ins.result[2]);	
 						lash_debugLogAdd(&logger, "midi", LASH_DEBUG_LOG_LEVEL_DEBUG, loggermsg);
 						lash_netsimmidiInstructionReset(&ins);
+						nanosleep(&ns, &nsr);
 					}
 				}
 			} else {

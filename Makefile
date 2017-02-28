@@ -1,6 +1,6 @@
 INCLUDE = ./include/
 LIBS = ./lib/
-LIBDIR = ./bin/
+LIBDIR = ./lib/
 BINDIR = ./bin/
 SRCDIR = ./src/
 BUILDDIR = ./build/
